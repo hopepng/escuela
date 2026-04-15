@@ -1,0 +1,22 @@
+<div class="layout">
+  <nav class="sidebar">
+    <div class="brand">SPA App</div>
+    <div class="user-info" *ngIf="currentUser">
+      <div class="avatar">{{ currentUser.name.charAt(0) }}</div>
+      <div>
+        <p class="user-name">{{ currentUser.name }}</p>
+        <p class="user-role">{{ currentUser.role | roleLabel }}</p>
+      </div>
+    </div>
+    <ul class="nav-links">
+      <li><a routerLink="/dashboard/courses" routerLinkActive="active">Cursos</a></li>
+      <li *appHasRole="['admin']">
+        <a routerLink="/dashboard/users" routerLinkActive="active">Usuarios</a>
+      </li>
+    </ul>
+    <button class="logout-btn" (click)="logout()">Cerrar sesión</button>
+  </nav>
+  <main class="content">
+    <router-outlet></router-outlet>
+  </main>
+</div>
