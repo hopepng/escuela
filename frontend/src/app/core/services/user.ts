@@ -6,7 +6,7 @@ import { User, UserCreate } from '../models/user';
 
 @Injectable({ providedIn: 'root' })
 export class UserService {
-  private apiUrl = `${environment.apiUrl}/users`;
+  private apiUrl = `${environment.apiUrl}/users/`;
 
   constructor(private http: HttpClient) {}
 
@@ -19,10 +19,10 @@ export class UserService {
   }
 
   update(id: number, user: Partial<UserCreate>): Observable<User> {
-    return this.http.put<User>(`${this.apiUrl}/${id}`, user);
+    return this.http.put<User>(`${this.apiUrl}${id}`, user);
   }
 
   delete(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+    return this.http.delete<void>(`${this.apiUrl}${id}`);
   }
 }

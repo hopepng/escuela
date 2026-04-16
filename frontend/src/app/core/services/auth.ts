@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
@@ -17,14 +17,29 @@ export class AuthService {
     if (token) this.loadUserFromToken(token);
   }
 
-  login(credentials: LoginRequest): Observable<TokenResponse> {
-    return this.http.post<TokenResponse>(`${this.apiUrl}/auth/login`, credentials).pipe(
-      tap(res => {
-        localStorage.setItem('token', res.access_token);
-        this.loadUserFromToken(res.access_token);
-      })
-    );
-  }
+login(credentials: LoginRequest): Observable<TokenResponse> {
+  const body = new HttpParams()
+    .set('username', credentials.email)   // ← OAuth2 espera "username", no "email"
+    .set('password', credentials.password);
+
+  const headers = new HttpHeaders({
+    'Content-Type': 'application/x-www-form-urlencoded'
+  });
+
+  return this.http.post<TokenResponse>(`${this.apiUrl}/auth/login`, body.toString(), { headers }).pipe(
+    tap(res => {
+      localStorage.setItem('token', res.access_token);
+      this.loadUserFromToken(res.access_token);
+      this.redirectByRole();
+    })
+  );
+}
+private redirectByRole(): void {
+  const role = this.getRole();
+  if (role === 'admin') this.router.navigate(['/dashboard/users']);
+  else if (role === 'profesor') this.router.navigate(['/dashboard/courses']);
+  else this.router.navigate(['/dashboard/courses']);
+}
 
   logout(): void {
     localStorage.removeItem('token');

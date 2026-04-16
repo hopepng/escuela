@@ -1,1 +1,131 @@
-<p>user-list works!</p>
+<div class="ul-page">
+
+  <!-- Header -->
+  <div class="ul-header">
+    <div>
+      <h1 class="ul-title">Usuarios</h1>
+      <p class="ul-subtitle">Gestión de cuentas del sistema</p>
+    </div>
+    <button class="btn-primary" (click)="openCreate()">
+      <span class="btn-icon">+</span> Nuevo usuario
+    </button>
+  </div>
+
+  <!-- Loading -->
+  <div class="ul-state" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>Cargando usuarios…</p>
+  </div>
+
+  <!-- Error -->
+  <div class="ul-state ul-error" *ngIf="!loading && error">
+    <p>{{ error }}</p>
+    <button class="btn-outline" (click)="loadUsers()">Reintentar</button>
+  </div>
+
+  <!-- Empty -->
+  <div class="ul-state" *ngIf="!loading && !error && users.length === 0">
+    <p class="ul-empty-text">No hay usuarios registrados.</p>
+    <button class="btn-primary" (click)="openCreate()">Crear el primero</button>
+  </div>
+
+  <!-- Table -->
+
+  <div class="ul-table-wrap" *ngIf="!loading && !error && users.length > 0">
+    <table class="ul-table">
+      <thead>
+        <tr>
+          <th>Usuario</th>
+          <th>Email</th>
+          <th>Rol</th>
+          <th class="th-actions">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let user of users" class="ul-row">
+          <td class="td-user">
+            <div class="ul-avatar">{{ getInitial(user.name) }}</div>
+            <span class="ul-name">{{ user.name }}</span>
+          </td>
+          <td class="td-email">{{ user.email }}</td>
+          <td>
+            <span class="role-badge" [ngClass]="'role-' + (user.role)">
+              {{ getRoleLabel(user.role) }}
+            </span>
+          </td>
+          <td class="td-actions">
+            <ng-container *ngIf="deletingId !== user.id; else confirmTpl">
+              <button class="btn-edit" (click)="openEdit(user)">Editar</button>
+              <button class="btn-del" (click)="confirmDelete(user.id)">Eliminar</button>
+            </ng-container>
+            <ng-template #confirmTpl>
+              <span class="confirm-text">¿Seguro?</span>
+              <button class="btn-del" (click)="deleteUser(user.id)">Sí</button>
+              <button class="btn-outline-sm" (click)="cancelDelete()">No</button>
+            </ng-template>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Modal overlay -->
+  <div class="ul-overlay" *ngIf="showForm" (click)="closeForm()"></div>
+
+  <!-- Modal -->
+  <div class="ul-modal" *ngIf="showForm">
+    <div class="modal-header">
+      <h2>{{ editingUser ? 'Editar usuario' : 'Nuevo usuario' }}</h2>
+      <button class="modal-close" (click)="closeForm()">✕</button>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+
+      <div class="field">
+        <label>Nombre</label>
+        <input type="text" formControlName="name" placeholder="Nombre completo" />
+        <span class="field-error" *ngIf="form.get('name')?.invalid && form.get('name')?.touched">
+          Nombre requerido (mín. 2 caracteres)
+        </span>
+      </div>
+
+      <div class="field">
+        <label>Email</label>
+        <input type="email" formControlName="email" placeholder="correo@ejemplo.com" />
+        <span class="field-error" *ngIf="form.get('email')?.invalid && form.get('email')?.touched">
+          Email inválido
+        </span>
+      </div>
+
+      <div class="field">
+        <label>Contraseña <span class="optional" *ngIf="editingUser">(dejar vacío para no cambiar)</span></label>
+        <input type="password" formControlName="password" placeholder="••••••••" />
+        <span class="field-error" *ngIf="form.get('password')?.invalid && form.get('password')?.touched">
+          Contraseña requerida
+        </span>
+      </div>
+
+      <div class="field">
+        <label>Rol</label>
+        <select formControlName="role_id">
+          <option [ngValue]="null" disabled>Seleccionar rol…</option>
+          <option *ngFor="let r of roles" [ngValue]="r.value">{{ r.label }}</option>
+        </select>
+        <span class="field-error" *ngIf="form.get('role_id')?.invalid && form.get('role_id')?.touched">
+          Rol requerido
+        </span>
+      </div>
+
+      <span class="field-error form-error" *ngIf="formError">{{ formError }}</span>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-outline" (click)="closeForm()">Cancelar</button>
+        <button type="submit" class="btn-primary" [disabled]="saving">
+          {{ saving ? 'Guardando…' : (editingUser ? 'Actualizar' : 'Crear') }}
+        </button>
+      </div>
+
+    </form>
+  </div>
+
+</div>

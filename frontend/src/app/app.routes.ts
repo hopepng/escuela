@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { AuthGuard } from './core/guards/auth-guard';
 import { LoginGuard } from './core/guards/login-guard';
+import { RoleGuard } from './core/guards/role-guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -14,6 +15,7 @@ export const routes: Routes = [
     canActivate: [AuthGuard],
     loadComponent: () => import('./dashboard/dashboard').then(m => m.DashboardComponent),
     children: [
+      { path: '', redirectTo: 'courses', pathMatch: 'full' },
       {
         path: 'courses',
         canActivate: [AuthGuard],
@@ -21,9 +23,15 @@ export const routes: Routes = [
       },
       {
         path: 'users',
-        canActivate: [AuthGuard],
+        canActivate: [AuthGuard, RoleGuard],
         data: { roles: ['admin'] },
         loadComponent: () => import('./users/components/user-list/user-list').then(m => m.UserList)
+      },
+      {
+        path: 'enrollments',
+        canActivate: [AuthGuard, RoleGuard],
+        data: { roles: ['admin', 'estudiante'] },
+        loadComponent: () => import('./enrollments/components/enrollment-list/enrollment-list').then(m => m.EnrollmentList)
       }
     ]
   },
