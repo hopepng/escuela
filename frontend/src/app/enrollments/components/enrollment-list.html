@@ -1,0 +1,110 @@
+<div class="el-page">
+
+  <div class="el-header">
+    <div>
+      <h1 class="el-title">Matrículas</h1>
+      <p class="el-subtitle" *ngIf="userRole === 'admin'">Gestión de matrículas del sistema</p>
+      <p class="el-subtitle" *ngIf="userRole === 'estudiante'">Tus matrículas activas</p>
+    </div>
+    <button class="btn-primary" *ngIf="userRole === 'estudiante'" (click)="openEnroll()">
+      <span class="btn-icon">+</span> Matricularme
+    </button>
+  </div>
+
+  <div class="el-state" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>Cargando matrículas…</p>
+  </div>
+
+  <div class="el-state el-error" *ngIf="!loading && error">
+    <p>{{ error }}</p>
+    <button class="btn-outline" (click)="load()">Reintentar</button>
+  </div>
+
+  <div class="el-state" *ngIf="!loading && !error && enrollments.length === 0">
+    <p class="el-empty-text">No hay matrículas registradas.</p>
+    <button class="btn-primary" *ngIf="userRole === 'estudiante'" (click)="openEnroll()">
+      Matricularme en un curso
+    </button>
+  </div>
+
+  <div class="el-table-wrap" *ngIf="!loading && !error && enrollments.length > 0">
+    <table class="el-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Curso</th>
+          <th *ngIf="userRole === 'admin'">Estudiante ID</th>
+          <th>Estado</th>
+          <th class="th-actions">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let e of enrollments" class="el-row">
+          <td class="td-id">{{ e.id }}</td>
+          <td>{{ getCourseName(e.course_id) }}</td>
+          <td *ngIf="userRole === 'admin'">{{ e.student_id }}</td>
+          <td>
+            <span class="status-badge" [ngClass]="'status-' + e.status">
+              {{ statusLabel(e.status) }}
+            </span>
+          </td>
+          <td class="td-actions">
+            <ng-container *ngIf="deletingId !== e.id; else confirmTpl">
+              <button class="btn-edit" (click)="openEdit(e)">Estado</button>
+              <button class="btn-del" (click)="confirmDelete(e.id)">Eliminar</button>
+            </ng-container>
+            <ng-template #confirmTpl>
+              <span class="confirm-text">¿Seguro?</span>
+              <button class="btn-del" (click)="deleteEnrollment(e.id)">Sí</button>
+              <button class="btn-outline-sm" (click)="cancelDelete()">No</button>
+            </ng-template>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="el-overlay" *ngIf="showForm" (click)="closeForm()"></div>
+
+  <div class="el-modal" *ngIf="showForm">
+    <div class="modal-header">
+      <h2>{{ editingEnrollment ? 'Cambiar estado' : 'Matricularme en curso' }}</h2>
+      <button class="modal-close" (click)="closeForm()">✕</button>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+
+      <div class="field" *ngIf="!editingEnrollment">
+        <label>Curso</label>
+        <select formControlName="course_id">
+          <option [ngValue]="null" disabled>Seleccionar curso…</option>
+          <option *ngFor="let c of availableCourses" [ngValue]="c.id">{{ c.title }}</option>
+        </select>
+        <span class="field-error" *ngIf="form.get('course_id')?.invalid && form.get('course_id')?.touched">
+          Selecciona un curso
+        </span>
+      </div>
+
+      <div class="field" *ngIf="editingEnrollment">
+        <label>Nuevo estado</label>
+        <select formControlName="status">
+          <option value="activo">Activo</option>
+          <option value="inactivo">Inactivo</option>
+          <option value="completado">Completado</option>
+        </select>
+      </div>
+
+      <span class="field-error form-error" *ngIf="formError">{{ formError }}</span>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-outline" (click)="closeForm()">Cancelar</button>
+        <button type="submit" class="btn-primary" [disabled]="saving">
+          {{ saving ? 'Guardando…' : (editingEnrollment ? 'Actualizar' : 'Matricular') }}
+        </button>
+      </div>
+
+    </form>
+  </div>
+
+</div>
