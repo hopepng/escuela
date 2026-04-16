@@ -259,21 +259,22 @@
 }
 .btn-outline:hover { border-color: #aaa; color: #333; }
 
-.btn-enroll {
+/* "Ver alumnos" / "Matricular" shared style */
+.btn-students {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
   padding: 5px 10px;
   background: transparent;
-  color: #059669;
-  border: 1px solid #a7f3d0;
+  color: #4f46e5;
+  border: 1px solid #c7d2fe;
   border-radius: 6px;
   font-size: 12px;
   cursor: pointer;
   transition: all 0.15s;
   white-space: nowrap;
 }
-.btn-enroll:hover { background: #ecfdf5; }
+.btn-students:hover { background: #ede9fe; }
 
 .btn-edit {
   padding: 5px 12px;
@@ -334,6 +335,11 @@
   box-shadow: 0 8px 40px rgba(0, 0, 0, 0.18);
   animation: slide-up 0.2s ease;
 }
+
+.cl-modal--wide {
+  max-width: 520px;
+}
+
 @keyframes slide-up {
   from { transform: translate(-50%, -46%); opacity: 0; }
   to   { transform: translate(-50%, -50%); opacity: 1; }
@@ -341,11 +347,20 @@
 
 .modal-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   margin-bottom: 1.5rem;
+  gap: 0.5rem;
 }
 .modal-header h2 { margin: 0; font-size: 1.1rem; font-weight: 600; color: #111; }
+
+.modal-header-info { display: flex; flex-direction: column; gap: 2px; }
+
+.modal-course-name {
+  font-size: 12px;
+  color: #888;
+  margin: 0;
+}
 
 .modal-close {
   background: none;
@@ -357,6 +372,7 @@
   padding: 4px;
   border-radius: 4px;
   transition: color 0.15s;
+  flex-shrink: 0;
 }
 .modal-close:hover { color: #555; }
 
@@ -370,6 +386,105 @@
   border-radius: 8px;
 }
 .enroll-course-label strong { color: #111; }
+
+/* ── Students modal inner ────────────────────────────────────── */
+.students-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 2.5rem 1rem;
+  color: #888;
+  font-size: 14px;
+}
+.students-error { color: #e53e3e; }
+
+.students-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 320px;
+  overflow-y: auto;
+  margin-bottom: 0.75rem;
+  border: 1px solid #f0f0f8;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.student-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  background: white;
+  border-bottom: 1px solid #f4f4f8;
+  transition: background 0.15s;
+}
+.student-item:last-child { border-bottom: none; }
+.student-item:hover { background: #fafafa; }
+
+.student-avatar-lg {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6366f1, #7cb9f0);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.student-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  overflow: hidden;
+}
+
+.student-name {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: #222;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.student-email {
+  font-size: 12px;
+  color: #888;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.student-badge {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  background: #d1fae5;
+  color: #065f46;
+  flex-shrink: 0;
+}
+
+.students-footer {
+  padding: 10px 14px 4px;
+  border-top: 1px solid #f0f0f8;
+  margin-top: 0.25rem;
+}
+
+.students-count {
+  font-size: 12px;
+  color: #999;
+  font-weight: 500;
+}
 
 /* ── Form fields ─────────────────────────────────────────────── */
 .field {

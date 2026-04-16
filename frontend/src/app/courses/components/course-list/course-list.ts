@@ -1,7 +1,7 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { CourseService } from '../../../core/services/course';
+import { CourseService, CourseStudent } from '../../../core/services/course';
 import { UserService } from '../../../core/services/user';
 import { EnrollmentService } from '../../../core/services/enrollment';
 import { AuthService } from '../../../core/services/auth';
@@ -17,10 +17,10 @@ import { Enrollment } from '../../../core/models/enrollment';
   styleUrl: './course-list.css',
 })
 export class CourseList implements OnInit {
-  courses: Course[]       = [];
-  teachers: User[]        = [];
-  students: User[]        = [];
-  myEnrollments: Enrollment[] = [];   // para estudainte
+  courses: Course[]           = [];
+  teachers: User[]            = [];
+  students: User[]            = [];
+  myEnrollments: Enrollment[] = [];
 
   loading = true;
   error   = '';
@@ -33,14 +33,21 @@ export class CourseList implements OnInit {
   formError = '';
   deletingId: number | null = null;
 
-  // ── Enrollment form ──────────────────────────────────────────
-  showEnrollModal    = false;
+  // ── Enrollment form (admin modal) ────────────────────────────
+  showEnrollModal   = false;
   enrollingCourse: Course | null = null;
   enrollForm: FormGroup;
-  enrollSaving = false;
-  enrollError  = '';
-  enrollSuccess: number | null = null;   // curso (courseID) que acaba de matricularse
-  enrollingId: number | null = null;     // para el spinner por tarjeta (estudiante)
+  enrollSaving  = false;
+  enrollError   = '';
+  enrollSuccess: number | null = null;
+  enrollingId: number | null = null;
+
+  // ── Students modal (profesor) ────────────────────────────────
+  showStudentsModal    = false;
+  studentsModalCourse: Course | null = null;
+  courseStudents: CourseStudent[] = [];
+  studentsLoading = false;
+  studentsError   = '';
 
   userRole: string | null = null;
 
@@ -178,6 +185,35 @@ export class CourseList implements OnInit {
     });
   }
 
+  // ── Students modal (profesor) ─────────────────────────────────
+
+  openStudentsModal(course: Course): void {
+    this.studentsModalCourse = course;
+    this.courseStudents      = [];
+    this.studentsError       = '';
+    this.studentsLoading     = true;
+    this.showStudentsModal   = true;
+
+    this.courseService.getStudents(course.id).subscribe({
+      next: students => {
+        this.courseStudents  = students;
+        this.studentsLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.studentsError   = 'No se pudieron cargar los estudiantes.';
+        this.studentsLoading = false;
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  closeStudentsModal(): void {
+    this.showStudentsModal   = false;
+    this.studentsModalCourse = null;
+    this.courseStudents      = [];
+  }
+
   // ── Enrollment: estudiante ────────────────────────────────────
 
   isEnrolled(courseId: number): boolean {
@@ -188,7 +224,7 @@ export class CourseList implements OnInit {
     this.enrollingId = course.id;
     this.enrollmentService.create({ course_id: course.id }).subscribe({
       next: () => {
-        this.enrollingId  = null;
+        this.enrollingId   = null;
         this.enrollSuccess = course.id;
         this.loadMyEnrollments();
         setTimeout(() => { this.enrollSuccess = null; this.cdr.detectChanges(); }, 2500);
@@ -207,7 +243,7 @@ export class CourseList implements OnInit {
   openEnrollAdmin(course: Course): void {
     this.enrollingCourse = course;
     this.enrollForm.reset();
-    this.enrollError  = '';
+    this.enrollError     = '';
     this.showEnrollModal = true;
   }
 

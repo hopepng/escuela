@@ -50,10 +50,10 @@
           </svg>
         </div>
 
-        <!-- Admin: edit / delete / enroll -->
+        <!-- Admin actions -->
         <div class="cl-card-actions" *ngIf="userRole === 'admin'">
           <ng-container *ngIf="deletingId !== course.id; else confirmTpl">
-            <button class="btn-enroll" (click)="openEnrollAdmin(course)" title="Matricular estudiante">
+            <button class="btn-students" (click)="openEnrollAdmin(course)" title="Matricular estudiante">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13">
                 <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
                 <circle cx="8.5" cy="7" r="4"/>
@@ -70,6 +70,19 @@
             <button class="btn-del"        (click)="deleteCourse(course.id)">Sí</button>
             <button class="btn-outline-sm" (click)="cancelDelete()">No</button>
           </ng-template>
+        </div>
+
+        <!-- Profesor actions -->
+        <div class="cl-card-actions" *ngIf="userRole === 'profesor'">
+          <button class="btn-students" (click)="openStudentsModal(course)" title="Ver estudiantes matriculados">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+            Ver alumnos
+          </button>
         </div>
       </div>
 
@@ -89,7 +102,6 @@
           <button
             *ngIf="!isEnrolled(course.id) && enrollSuccess !== course.id"
             class="btn-enroll-pill"
-            [class.loading]="enrollingId === course.id"
             [disabled]="enrollingId === course.id"
             (click)="enrollSelf(course)">
             <svg *ngIf="enrollingId !== course.id" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" width="12" height="12">
@@ -193,6 +205,64 @@
       </div>
 
     </form>
+  </div>
+
+  <!-- ─── Students modal (profesor) ────────────────────────── -->
+  <div class="cl-overlay" *ngIf="showStudentsModal" (click)="closeStudentsModal()"></div>
+
+  <div class="cl-modal cl-modal--wide" *ngIf="showStudentsModal">
+    <div class="modal-header">
+      <div class="modal-header-info">
+        <h2>Estudiantes matriculados</h2>
+        <p class="modal-course-name">{{ studentsModalCourse?.title }}</p>
+      </div>
+      <button class="modal-close" (click)="closeStudentsModal()">✕</button>
+    </div>
+
+    <!-- Loading students -->
+    <div class="students-state" *ngIf="studentsLoading">
+      <div class="spinner"></div>
+      <p>Cargando estudiantes…</p>
+    </div>
+
+    <!-- Error -->
+    <div class="students-state students-error" *ngIf="!studentsLoading && studentsError">
+      <p>{{ studentsError }}</p>
+    </div>
+
+    <!-- Empty -->
+    <div class="students-state" *ngIf="!studentsLoading && !studentsError && courseStudents.length === 0">
+      <div class="cl-empty-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+        </svg>
+      </div>
+      <p class="cl-empty-text">Aún no hay estudiantes matriculados.</p>
+    </div>
+
+    <!-- Student list -->
+    <ul class="students-list" *ngIf="!studentsLoading && !studentsError && courseStudents.length > 0">
+      <li class="student-item" *ngFor="let s of courseStudents">
+        <div class="student-avatar-lg">{{ getInitial(s.name) }}</div>
+        <div class="student-info">
+          <span class="student-name">{{ s.name }}</span>
+          <span class="student-email">{{ s.email }}</span>
+        </div>
+        <span class="student-badge">Activo</span>
+      </li>
+    </ul>
+
+    <!-- Count footer -->
+    <div class="students-footer" *ngIf="!studentsLoading && !studentsError && courseStudents.length > 0">
+      <span class="students-count">
+        {{ courseStudents.length }} {{ courseStudents.length === 1 ? 'estudiante' : 'estudiantes' }} matriculados
+      </span>
+    </div>
+
+    <div class="modal-actions">
+      <button type="button" class="btn-primary" (click)="closeStudentsModal()">Cerrar</button>
+    </div>
   </div>
 
 </div>

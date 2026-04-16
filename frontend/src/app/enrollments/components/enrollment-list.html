@@ -81,7 +81,8 @@
           <td>
             <div class="td-actions">
               <ng-container *ngIf="deletingId !== e.id; else confirmTpl">
-                <button class="btn-edit" (click)="openEdit(e)">Estado</button>
+                <!-- Solo el admin puede cambiar el estado -->
+                <button class="btn-edit" *ngIf="userRole === 'admin'" (click)="openEdit(e)">Estado</button>
                 <button class="btn-del" (click)="confirmDelete(e.id)">Eliminar</button>
               </ng-container>
               <ng-template #confirmTpl>
@@ -135,7 +136,7 @@
         </span>
       </div>
 
-      <!-- Status selector (edit mode) -->
+      <!-- Status selector (edit mode, admin only) -->
       <div class="field" *ngIf="editingEnrollment">
         <label>Nuevo estado</label>
         <select formControlName="status">
