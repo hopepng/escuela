@@ -9,6 +9,7 @@ class StatusEnum(str, Enum):
 
 class EnrollmentCreate(BaseModel):
     course_id: int
+    student_id: Optional[int] = None
 
 class EnrollmentUpdate(BaseModel):
     status: StatusEnum
