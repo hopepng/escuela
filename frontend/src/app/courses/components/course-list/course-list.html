@@ -36,9 +36,11 @@
     <button class="btn-primary" *ngIf="userRole === 'admin'" (click)="openCreate()">Crear el primero</button>
   </div>
 
-  <!-- Grid de cursos -->
+  <!-- Grid -->
   <div class="cl-grid" *ngIf="!loading && !error && courses.length > 0">
     <div class="cl-card" *ngFor="let course of courses">
+
+      <!-- Card header -->
       <div class="cl-card-header">
         <div class="cl-card-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
@@ -47,36 +49,75 @@
             <path d="M2 12l10 5 10-5"/>
           </svg>
         </div>
+
+        <!-- Admin: edit / delete / enroll -->
         <div class="cl-card-actions" *ngIf="userRole === 'admin'">
           <ng-container *ngIf="deletingId !== course.id; else confirmTpl">
+            <button class="btn-enroll" (click)="openEnrollAdmin(course)" title="Matricular estudiante">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="8.5" cy="7" r="4"/>
+                <line x1="20" y1="8" x2="20" y2="14"/>
+                <line x1="23" y1="11" x2="17" y2="11"/>
+              </svg>
+              Matricular
+            </button>
             <button class="btn-edit" (click)="openEdit(course)">Editar</button>
-            <button class="btn-del" (click)="confirmDelete(course.id)">Eliminar</button>
+            <button class="btn-del"  (click)="confirmDelete(course.id)">Eliminar</button>
           </ng-container>
           <ng-template #confirmTpl>
             <span class="confirm-text">¿Seguro?</span>
-            <button class="btn-del" (click)="deleteCourse(course.id)">Sí</button>
+            <button class="btn-del"        (click)="deleteCourse(course.id)">Sí</button>
             <button class="btn-outline-sm" (click)="cancelDelete()">No</button>
           </ng-template>
         </div>
       </div>
 
+      <!-- Content -->
       <h3 class="cl-card-title">{{ course.title }}</h3>
       <p class="cl-card-desc">{{ course.description || 'Sin descripción disponible.' }}</p>
 
+      <!-- Footer -->
       <div class="cl-card-footer">
         <div class="cl-teacher">
           <div class="cl-teacher-avatar">{{ getInitial(getTeacherName(course)) }}</div>
           <span class="cl-teacher-name">{{ getTeacherName(course) }}</span>
         </div>
-        <span class="cl-badge">Activo</span>
+
+        <!-- Estudiante: botón matricularse -->
+        <ng-container *ngIf="userRole === 'estudiante'">
+          <button
+            *ngIf="!isEnrolled(course.id) && enrollSuccess !== course.id"
+            class="btn-enroll-pill"
+            [class.loading]="enrollingId === course.id"
+            [disabled]="enrollingId === course.id"
+            (click)="enrollSelf(course)">
+            <svg *ngIf="enrollingId !== course.id" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" width="12" height="12">
+              <line x1="12" y1="5" x2="12" y2="19"/>
+              <line x1="5"  y1="12" x2="19" y2="12"/>
+            </svg>
+            <span class="btn-spinner" *ngIf="enrollingId === course.id"></span>
+            {{ enrollingId === course.id ? 'Matriculando…' : 'Matricularme' }}
+          </button>
+
+          <span class="enrolled-badge" *ngIf="isEnrolled(course.id) || enrollSuccess === course.id">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="11" height="11">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            Matriculado
+          </span>
+        </ng-container>
+
+        <!-- Admin / profesor: badge activo -->
+        <span class="cl-badge" *ngIf="userRole !== 'estudiante'">Activo</span>
       </div>
+
     </div>
   </div>
 
-  <!-- Modal overlay -->
+  <!-- ─── Course form modal (admin) ────────────────────────── -->
   <div class="cl-overlay" *ngIf="showForm" (click)="closeForm()"></div>
 
-  <!-- Modal -->
   <div class="cl-modal" *ngIf="showForm">
     <div class="modal-header">
       <h2>{{ editingCourse ? 'Editar curso' : 'Nuevo curso' }}</h2>
@@ -112,6 +153,42 @@
         <button type="button" class="btn-outline" (click)="closeForm()">Cancelar</button>
         <button type="submit" class="btn-primary" [disabled]="saving">
           {{ saving ? 'Guardando…' : (editingCourse ? 'Actualizar' : 'Crear') }}
+        </button>
+      </div>
+
+    </form>
+  </div>
+
+  <!-- ─── Enrollment modal (admin) ─────────────────────────── -->
+  <div class="cl-overlay" *ngIf="showEnrollModal" (click)="closeEnrollModal()"></div>
+
+  <div class="cl-modal" *ngIf="showEnrollModal">
+    <div class="modal-header">
+      <h2>Matricular estudiante</h2>
+      <button class="modal-close" (click)="closeEnrollModal()">✕</button>
+    </div>
+
+    <p class="enroll-course-label">Curso: <strong>{{ enrollingCourse?.title }}</strong></p>
+
+    <form [formGroup]="enrollForm" (ngSubmit)="submitEnrollAdmin()" novalidate>
+
+      <div class="field">
+        <label>Estudiante</label>
+        <select formControlName="student_id">
+          <option [ngValue]="null" disabled>Seleccionar estudiante…</option>
+          <option *ngFor="let s of students" [ngValue]="s.id">{{ s.name }}</option>
+        </select>
+        <span class="field-error" *ngIf="enrollForm.get('student_id')?.invalid && enrollForm.get('student_id')?.touched">
+          Selecciona un estudiante
+        </span>
+      </div>
+
+      <span class="field-error form-error" *ngIf="enrollError">{{ enrollError }}</span>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-outline" (click)="closeEnrollModal()">Cancelar</button>
+        <button type="submit" class="btn-primary" [disabled]="enrollSaving">
+          {{ enrollSaving ? 'Matriculando…' : 'Matricular' }}
         </button>
       </div>
 

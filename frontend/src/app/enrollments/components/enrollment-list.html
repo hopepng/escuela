@@ -1,91 +1,141 @@
 <div class="el-page">
 
+  <!-- Header -->
   <div class="el-header">
     <div>
       <h1 class="el-title">Matrículas</h1>
       <p class="el-subtitle" *ngIf="userRole === 'admin'">Gestión de matrículas del sistema</p>
       <p class="el-subtitle" *ngIf="userRole === 'estudiante'">Tus matrículas activas</p>
     </div>
-    <button class="btn-primary" *ngIf="userRole === 'estudiante'" (click)="openEnroll()">
-      <span class="btn-icon">+</span> Matricularme
+    <button class="btn-primary" (click)="openCreate()">
+      <span class="btn-icon">+</span>
+      <span *ngIf="userRole === 'admin'">Nueva matrícula</span>
+      <span *ngIf="userRole === 'estudiante'">Matricularme</span>
     </button>
   </div>
 
+  <!-- Loading -->
   <div class="el-state" *ngIf="loading">
     <div class="spinner"></div>
     <p>Cargando matrículas…</p>
   </div>
 
+  <!-- Error -->
   <div class="el-state el-error" *ngIf="!loading && error">
     <p>{{ error }}</p>
     <button class="btn-outline" (click)="load()">Reintentar</button>
   </div>
 
+  <!-- Empty -->
   <div class="el-state" *ngIf="!loading && !error && enrollments.length === 0">
+    <div class="el-empty-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <rect x="3" y="4" width="18" height="18" rx="2"/>
+        <path d="M16 2v4M8 2v4M3 10h18"/>
+      </svg>
+    </div>
     <p class="el-empty-text">No hay matrículas registradas.</p>
-    <button class="btn-primary" *ngIf="userRole === 'estudiante'" (click)="openEnroll()">
-      Matricularme en un curso
+    <button class="btn-primary" (click)="openCreate()">
+      <span *ngIf="userRole === 'admin'">Crear la primera</span>
+      <span *ngIf="userRole === 'estudiante'">Matricularme en un curso</span>
     </button>
   </div>
 
+  <!-- Table -->
   <div class="el-table-wrap" *ngIf="!loading && !error && enrollments.length > 0">
     <table class="el-table">
       <thead>
         <tr>
           <th>#</th>
           <th>Curso</th>
-          <th *ngIf="userRole === 'admin'">Estudiante ID</th>
+          <th *ngIf="userRole === 'admin'">Estudiante</th>
           <th>Estado</th>
           <th class="th-actions">Acciones</th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let e of enrollments" class="el-row">
+
           <td class="td-id">{{ e.id }}</td>
-          <td>{{ getCourseName(e.course_id) }}</td>
-          <td *ngIf="userRole === 'admin'">{{ e.student_id }}</td>
+
+          <td>
+            <div class="td-course">
+              <div class="course-dot"></div>
+              {{ getCourseName(e.course_id) }}
+            </div>
+          </td>
+
+          <td *ngIf="userRole === 'admin'">
+            <div class="td-student">
+              <div class="student-avatar">{{ getStudentName(e.student_id).charAt(0).toUpperCase() }}</div>
+              <span>{{ getStudentName(e.student_id) }}</span>
+            </div>
+          </td>
+
           <td>
             <span class="status-badge" [ngClass]="'status-' + e.status">
               {{ statusLabel(e.status) }}
             </span>
           </td>
-          <td class="td-actions">
-            <ng-container *ngIf="deletingId !== e.id; else confirmTpl">
-              <button class="btn-edit" (click)="openEdit(e)">Estado</button>
-              <button class="btn-del" (click)="confirmDelete(e.id)">Eliminar</button>
-            </ng-container>
-            <ng-template #confirmTpl>
-              <span class="confirm-text">¿Seguro?</span>
-              <button class="btn-del" (click)="deleteEnrollment(e.id)">Sí</button>
-              <button class="btn-outline-sm" (click)="cancelDelete()">No</button>
-            </ng-template>
+
+          <td>
+            <div class="td-actions">
+              <ng-container *ngIf="deletingId !== e.id; else confirmTpl">
+                <button class="btn-edit" (click)="openEdit(e)">Estado</button>
+                <button class="btn-del" (click)="confirmDelete(e.id)">Eliminar</button>
+              </ng-container>
+              <ng-template #confirmTpl>
+                <span class="confirm-text">¿Seguro?</span>
+                <button class="btn-del" (click)="deleteEnrollment(e.id)">Sí</button>
+                <button class="btn-outline-sm" (click)="cancelDelete()">No</button>
+              </ng-template>
+            </div>
           </td>
+
         </tr>
       </tbody>
     </table>
   </div>
 
+  <!-- Overlay -->
   <div class="el-overlay" *ngIf="showForm" (click)="closeForm()"></div>
 
+  <!-- Modal -->
   <div class="el-modal" *ngIf="showForm">
     <div class="modal-header">
-      <h2>{{ editingEnrollment ? 'Cambiar estado' : 'Matricularme en curso' }}</h2>
+      <h2>{{ editingEnrollment ? 'Cambiar estado' : (userRole === 'admin' ? 'Nueva matrícula' : 'Matricularme en curso') }}</h2>
       <button class="modal-close" (click)="closeForm()">✕</button>
     </div>
 
     <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
 
+      <!-- Course selector (create mode) -->
       <div class="field" *ngIf="!editingEnrollment">
         <label>Curso</label>
         <select formControlName="course_id">
           <option [ngValue]="null" disabled>Seleccionar curso…</option>
           <option *ngFor="let c of availableCourses" [ngValue]="c.id">{{ c.title }}</option>
         </select>
-        <span class="field-error" *ngIf="form.get('course_id')?.invalid && form.get('course_id')?.touched">
+        <span class="field-error"
+          *ngIf="form.get('course_id')?.invalid && form.get('course_id')?.touched">
           Selecciona un curso
         </span>
       </div>
 
+      <!-- Student selector (admin create mode) -->
+      <div class="field" *ngIf="!editingEnrollment && userRole === 'admin'">
+        <label>Estudiante</label>
+        <select formControlName="student_id">
+          <option [ngValue]="null" disabled>Seleccionar estudiante…</option>
+          <option *ngFor="let s of students" [ngValue]="s.id">{{ s.name }}</option>
+        </select>
+        <span class="field-error"
+          *ngIf="form.get('student_id')?.invalid && form.get('student_id')?.touched">
+          Selecciona un estudiante
+        </span>
+      </div>
+
+      <!-- Status selector (edit mode) -->
       <div class="field" *ngIf="editingEnrollment">
         <label>Nuevo estado</label>
         <select formControlName="status">
@@ -100,7 +150,7 @@
       <div class="modal-actions">
         <button type="button" class="btn-outline" (click)="closeForm()">Cancelar</button>
         <button type="submit" class="btn-primary" [disabled]="saving">
-          {{ saving ? 'Guardando…' : (editingEnrollment ? 'Actualizar' : 'Matricular') }}
+          {{ saving ? 'Guardando…' : (editingEnrollment ? 'Actualizar' : (userRole === 'admin' ? 'Matricular' : 'Matricularme')) }}
         </button>
       </div>
 

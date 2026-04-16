@@ -50,16 +50,9 @@
   justify-content: center;
   color: #aaa;
 }
+.cl-empty-icon svg { width: 26px; height: 26px; }
 
-.cl-empty-icon svg {
-  width: 26px;
-  height: 26px;
-}
-
-.cl-empty-text {
-  font-size: 15px;
-  color: #aaa;
-}
+.cl-empty-text { font-size: 15px; color: #aaa; }
 
 /* ── Spinner ─────────────────────────────────────────────────── */
 .spinner {
@@ -83,7 +76,7 @@
 .cl-card {
   background: white;
   border-radius: 14px;
-  box-shadow: 0 1px 8px rgba(0,0,0,0.07);
+  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.07);
   padding: 1.375rem;
   display: flex;
   flex-direction: column;
@@ -91,13 +84,12 @@
   border: 1px solid #f0f0f8;
   transition: box-shadow 0.2s, transform 0.2s;
 }
-
 .cl-card:hover {
-  box-shadow: 0 4px 20px rgba(79,70,229,0.10);
+  box-shadow: 0 4px 20px rgba(79, 70, 229, 0.10);
   transform: translateY(-2px);
 }
 
-/* Card header row */
+/* Card header */
 .cl-card-header {
   display: flex;
   align-items: center;
@@ -115,16 +107,14 @@
   color: #4f46e5;
   flex-shrink: 0;
 }
-
-.cl-card-icon svg {
-  width: 18px;
-  height: 18px;
-}
+.cl-card-icon svg { width: 18px; height: 18px; }
 
 .cl-card-actions {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 /* Card content */
@@ -179,11 +169,7 @@
   flex-shrink: 0;
 }
 
-.cl-teacher-name {
-  font-size: 12px;
-  color: #666;
-  font-weight: 500;
-}
+.cl-teacher-name { font-size: 12px; color: #666; font-weight: 500; }
 
 .cl-badge {
   display: inline-block;
@@ -197,10 +183,48 @@
 }
 
 /* ── Confirm inline ──────────────────────────────────────────── */
-.confirm-text {
+.confirm-text { font-size: 12px; color: #e53e3e; font-weight: 500; }
+
+/* ── Enroll pill (estudiante) ────────────────────────────────── */
+.btn-enroll-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 12px;
+  background: #4f46e5;
+  color: white;
+  border: none;
+  border-radius: 20px;
   font-size: 12px;
-  color: #e53e3e;
   font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, opacity 0.2s;
+  white-space: nowrap;
+}
+.btn-enroll-pill:hover:not(:disabled) { background: #4338ca; }
+.btn-enroll-pill:disabled { opacity: 0.65; cursor: not-allowed; }
+
+.btn-spinner {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border: 2px solid rgba(255,255,255,0.4);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+/* Enrolled state badge */
+.enrolled-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: #d1fae5;
+  color: #065f46;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
 }
 
 /* ── Buttons ─────────────────────────────────────────────────── */
@@ -221,7 +245,6 @@
 }
 .btn-primary:hover:not(:disabled) { background: #4338ca; }
 .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
-
 .btn-icon { font-size: 18px; line-height: 1; }
 
 .btn-outline {
@@ -235,6 +258,22 @@
   transition: all 0.2s;
 }
 .btn-outline:hover { border-color: #aaa; color: #333; }
+
+.btn-enroll {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  background: transparent;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.btn-enroll:hover { background: #ecfdf5; }
 
 .btn-edit {
   padding: 5px 12px;
@@ -274,7 +313,7 @@
 .cl-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.35);
+  background: rgba(0, 0, 0, 0.35);
   z-index: 100;
   animation: fade-in 0.15s ease;
 }
@@ -292,7 +331,7 @@
   width: 100%;
   max-width: 460px;
   z-index: 101;
-  box-shadow: 0 8px 40px rgba(0,0,0,0.18);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.18);
   animation: slide-up 0.2s ease;
 }
 @keyframes slide-up {
@@ -306,13 +345,7 @@
   justify-content: space-between;
   margin-bottom: 1.5rem;
 }
-
-.modal-header h2 {
-  margin: 0;
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #111;
-}
+.modal-header h2 { margin: 0; font-size: 1.1rem; font-weight: 600; color: #111; }
 
 .modal-close {
   background: none;
@@ -327,6 +360,17 @@
 }
 .modal-close:hover { color: #555; }
 
+/* Enroll modal course label */
+.enroll-course-label {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 1.25rem;
+  padding: 8px 12px;
+  background: #f4f4f8;
+  border-radius: 8px;
+}
+.enroll-course-label strong { color: #111; }
+
 /* ── Form fields ─────────────────────────────────────────────── */
 .field {
   display: flex;
@@ -335,17 +379,9 @@
   margin-bottom: 1rem;
 }
 
-label {
-  font-size: 13px;
-  font-weight: 500;
-  color: #555;
-}
+label { font-size: 13px; font-weight: 500; color: #555; }
 
-.optional {
-  font-weight: 400;
-  color: #aaa;
-  font-size: 11px;
-}
+.optional { font-weight: 400; color: #aaa; font-size: 11px; }
 
 input, select, textarea {
   padding: 9px 12px;
@@ -361,15 +397,8 @@ input, select, textarea {
 }
 input:focus, select:focus, textarea:focus { border-color: #4f46e5; }
 
-.field-error {
-  font-size: 11px;
-  color: #e53e3e;
-}
-
-.form-error {
-  display: block;
-  margin-bottom: 0.5rem;
-}
+.field-error  { font-size: 11px; color: #e53e3e; }
+.form-error   { display: block; margin-bottom: 0.5rem; }
 
 .modal-actions {
   display: flex;

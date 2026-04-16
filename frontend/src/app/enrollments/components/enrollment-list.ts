@@ -3,9 +3,11 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { EnrollmentService } from '../../../core/services/enrollment';
 import { CourseService } from '../../../core/services/course';
+import { UserService } from '../../../core/services/user';
 import { AuthService } from '../../../core/services/auth';
 import { Enrollment, EnrollmentStatus } from '../../../core/models/enrollment';
 import { Course } from '../../../core/models/course';
+import { User } from '../../../core/models/user';
 
 @Component({
   selector: 'app-enrollment-list',
@@ -16,15 +18,17 @@ import { Course } from '../../../core/models/course';
 })
 export class EnrollmentList implements OnInit {
   enrollments: Enrollment[] = [];
-  courses: Course[] = [];
+  courses: Course[]         = [];
+  students: User[]          = [];
   availableCourses: Course[] = [];
-  loading = true;
-  error = '';
 
-  showForm = false;
+  loading = true;
+  error   = '';
+
+  showForm          = false;
   editingEnrollment: Enrollment | null = null;
   form: FormGroup;
-  saving = false;
+  saving    = false;
   formError = '';
   deletingId: number | null = null;
 
@@ -33,13 +37,15 @@ export class EnrollmentList implements OnInit {
   constructor(
     private enrollmentService: EnrollmentService,
     private courseService: CourseService,
+    private userService: UserService,
     private auth: AuthService,
     private fb: FormBuilder,
     private cdr: ChangeDetectorRef
   ) {
     this.form = this.fb.group({
-      course_id: [null, Validators.required],
-      status: ['activo'],
+      course_id:  [null],
+      student_id: [null],
+      status:     ['activo'],
     });
   }
 
@@ -47,12 +53,15 @@ export class EnrollmentList implements OnInit {
     this.userRole = this.auth.getRole();
     this.load();
     this.loadCourses();
+    if (this.userRole === 'admin') this.loadStudents();
   }
+
+  // ── Data loaders ────────────────────────────────────────────
 
   load(): void {
     this.loading = true;
     this.enrollmentService.getAll().subscribe({
-      next: (data) => {
+      next: data => {
         this.enrollments = data;
         this.loading = false;
         this.error = '';
@@ -68,31 +77,50 @@ export class EnrollmentList implements OnInit {
 
   loadCourses(): void {
     this.courseService.getAll().subscribe({
-      next: (data) => {
-        this.courses = data;
+      next: data => { this.courses = data; this.cdr.detectChanges(); },
+      error: () => {},
+    });
+  }
+
+  loadStudents(): void {
+    this.userService.getAll().subscribe({
+      next: users => {
+        this.students = users.filter((u: any) => (u.role?.name ?? u.role) === 'estudiante');
         this.cdr.detectChanges();
       },
       error: () => {},
     });
   }
 
-  openEnroll(): void {
+  // ── Modal helpers ────────────────────────────────────────────
+
+  openCreate(): void {
     this.editingEnrollment = null;
-    this.form.reset();
-    this.form.get('course_id')?.setValidators(Validators.required);
-    this.form.get('course_id')?.updateValueAndValidity();
-    // Filtrar cursos en los que ya está matriculado
-    const enrolledIds = this.enrollments.map(e => e.course_id);
-    this.availableCourses = this.courses.filter(c => !enrolledIds.includes(c.id));
+    this.form.reset({ status: 'activo' });
     this.formError = '';
+
+    if (this.userRole === 'admin') {
+      this.form.get('course_id')!.setValidators(Validators.required);
+      this.form.get('student_id')!.setValidators(Validators.required);
+      this.availableCourses = this.courses;
+    } else {
+      this.form.get('course_id')!.setValidators(Validators.required);
+      this.form.get('student_id')!.clearValidators();
+      const enrolledIds = this.enrollments.map(e => e.course_id);
+      this.availableCourses = this.courses.filter(c => !enrolledIds.includes(c.id));
+    }
+    this.form.get('course_id')!.updateValueAndValidity();
+    this.form.get('student_id')!.updateValueAndValidity();
     this.showForm = true;
   }
 
   openEdit(enrollment: Enrollment): void {
     this.editingEnrollment = enrollment;
-    this.form.patchValue({ status: enrollment.status });
-    this.form.get('course_id')?.clearValidators();
-    this.form.get('course_id')?.updateValueAndValidity();
+    this.form.reset({ status: enrollment.status });
+    this.form.get('course_id')!.clearValidators();
+    this.form.get('student_id')!.clearValidators();
+    this.form.get('course_id')!.updateValueAndValidity();
+    this.form.get('student_id')!.updateValueAndValidity();
     this.formError = '';
     this.showForm = true;
   }
@@ -105,21 +133,24 @@ export class EnrollmentList implements OnInit {
 
   submit(): void {
     if (this.form.invalid) { this.form.markAllAsTouched(); return; }
-    this.saving = true;
+    this.saving    = true;
     this.formError = '';
 
     if (this.editingEnrollment) {
       this.enrollmentService.update(this.editingEnrollment.id, {
-        status: this.form.value.status as EnrollmentStatus
+        status: this.form.value.status as EnrollmentStatus,
       }).subscribe({
-        next: () => { this.saving = false; this.closeForm(); this.load(); },
+        next:  () => { this.saving = false; this.closeForm(); this.load(); },
         error: () => { this.formError = 'Error al actualizar estado.'; this.saving = false; },
       });
     } else {
-      this.enrollmentService.create({ course_id: this.form.value.course_id }).subscribe({
-        next: () => { this.saving = false; this.closeForm(); this.load(); },
-        error: (err) => {
-          this.formError = err?.error?.detail ?? 'Error al matricularse.';
+      const payload: any = { course_id: this.form.value.course_id };
+      if (this.userRole === 'admin') payload.student_id = this.form.value.student_id;
+
+      this.enrollmentService.create(payload).subscribe({
+        next:  () => { this.saving = false; this.closeForm(); this.load(); },
+        error: err => {
+          this.formError = err?.error?.detail ?? 'Error al matricular.';
           this.saving = false;
         },
       });
@@ -127,25 +158,28 @@ export class EnrollmentList implements OnInit {
   }
 
   confirmDelete(id: number): void { this.deletingId = id; }
-  cancelDelete(): void { this.deletingId = null; }
+  cancelDelete(): void            { this.deletingId = null; }
 
   deleteEnrollment(id: number): void {
     this.enrollmentService.delete(id).subscribe({
-      next: () => { this.deletingId = null; this.load(); },
+      next:  () => { this.deletingId = null; this.load(); },
       error: () => { this.deletingId = null; },
     });
   }
 
+  // ── Display helpers ──────────────────────────────────────────
+
   getCourseName(courseId: number): string {
-    const course = this.courses.find(c => c.id === courseId);
-    return course ? course.title : `Curso #${courseId}`;
+    return this.courses.find(c => c.id === courseId)?.title ?? `Curso #${courseId}`;
+  }
+
+  getStudentName(studentId: number): string {
+    return this.students.find(s => s.id === studentId)?.name ?? `Estudiante #${studentId}`;
   }
 
   statusLabel(status: EnrollmentStatus): string {
     const labels: Record<EnrollmentStatus, string> = {
-      activo: 'Activo',
-      inactivo: 'Inactivo',
-      completado: 'Completado'
+      activo: 'Activo', inactivo: 'Inactivo', completado: 'Completado',
     };
     return labels[status] ?? status;
   }
