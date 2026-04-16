@@ -1,1 +1,121 @@
-<p>course-list works!</p>
+<div class="cl-page">
+
+  <!-- Header -->
+  <div class="cl-header">
+    <div>
+      <h1 class="cl-title">Cursos</h1>
+      <p class="cl-subtitle">Catálogo de cursos disponibles</p>
+    </div>
+    <button class="btn-primary" *ngIf="userRole === 'admin'" (click)="openCreate()">
+      <span class="btn-icon">+</span> Nuevo curso
+    </button>
+  </div>
+
+  <!-- Loading -->
+  <div class="cl-state" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>Cargando cursos…</p>
+  </div>
+
+  <!-- Error -->
+  <div class="cl-state cl-error" *ngIf="!loading && error">
+    <p>{{ error }}</p>
+    <button class="btn-outline" (click)="loadCourses()">Reintentar</button>
+  </div>
+
+  <!-- Empty -->
+  <div class="cl-state" *ngIf="!loading && !error && courses.length === 0">
+    <div class="cl-empty-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+        <path d="M2 17l10 5 10-5"/>
+        <path d="M2 12l10 5 10-5"/>
+      </svg>
+    </div>
+    <p class="cl-empty-text">No hay cursos registrados.</p>
+    <button class="btn-primary" *ngIf="userRole === 'admin'" (click)="openCreate()">Crear el primero</button>
+  </div>
+
+  <!-- Grid de cursos -->
+  <div class="cl-grid" *ngIf="!loading && !error && courses.length > 0">
+    <div class="cl-card" *ngFor="let course of courses">
+      <div class="cl-card-header">
+        <div class="cl-card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+            <path d="M2 17l10 5 10-5"/>
+            <path d="M2 12l10 5 10-5"/>
+          </svg>
+        </div>
+        <div class="cl-card-actions" *ngIf="userRole === 'admin'">
+          <ng-container *ngIf="deletingId !== course.id; else confirmTpl">
+            <button class="btn-edit" (click)="openEdit(course)">Editar</button>
+            <button class="btn-del" (click)="confirmDelete(course.id)">Eliminar</button>
+          </ng-container>
+          <ng-template #confirmTpl>
+            <span class="confirm-text">¿Seguro?</span>
+            <button class="btn-del" (click)="deleteCourse(course.id)">Sí</button>
+            <button class="btn-outline-sm" (click)="cancelDelete()">No</button>
+          </ng-template>
+        </div>
+      </div>
+
+      <h3 class="cl-card-title">{{ course.title }}</h3>
+      <p class="cl-card-desc">{{ course.description || 'Sin descripción disponible.' }}</p>
+
+      <div class="cl-card-footer">
+        <div class="cl-teacher">
+          <div class="cl-teacher-avatar">{{ getInitial(getTeacherName(course)) }}</div>
+          <span class="cl-teacher-name">{{ getTeacherName(course) }}</span>
+        </div>
+        <span class="cl-badge">Activo</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal overlay -->
+  <div class="cl-overlay" *ngIf="showForm" (click)="closeForm()"></div>
+
+  <!-- Modal -->
+  <div class="cl-modal" *ngIf="showForm">
+    <div class="modal-header">
+      <h2>{{ editingCourse ? 'Editar curso' : 'Nuevo curso' }}</h2>
+      <button class="modal-close" (click)="closeForm()">✕</button>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+
+      <div class="field">
+        <label>Título</label>
+        <input type="text" formControlName="title" placeholder="Nombre del curso" />
+        <span class="field-error" *ngIf="form.get('title')?.invalid && form.get('title')?.touched">
+          Título requerido (mín. 3 caracteres)
+        </span>
+      </div>
+
+      <div class="field">
+        <label>Descripción <span class="optional">(opcional)</span></label>
+        <textarea formControlName="description" placeholder="Descripción del curso…" rows="3"></textarea>
+      </div>
+
+      <div class="field">
+        <label>Profesor <span class="optional">(opcional)</span></label>
+        <select formControlName="teacher_id">
+          <option [ngValue]="null">Sin asignar</option>
+          <option *ngFor="let t of teachers" [ngValue]="t.id">{{ t.name }}</option>
+        </select>
+      </div>
+
+      <span class="field-error form-error" *ngIf="formError">{{ formError }}</span>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-outline" (click)="closeForm()">Cancelar</button>
+        <button type="submit" class="btn-primary" [disabled]="saving">
+          {{ saving ? 'Guardando…' : (editingCourse ? 'Actualizar' : 'Crear') }}
+        </button>
+      </div>
+
+    </form>
+  </div>
+
+</div>

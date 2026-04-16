@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../core/services/auth';
@@ -11,7 +11,8 @@ import { HasRoleDirective } from '../shared/directives/has-role';
   standalone: true,
   imports: [CommonModule, RouterModule, RoleLabelPipe, HasRoleDirective],
   templateUrl: './dashboard.html',
-  styleUrls: ['./dashboard.css']
+  styleUrls: ['./dashboard.css'],
+  encapsulation: ViewEncapsulation.None
 })
 export class DashboardComponent implements OnInit {
   currentUser: User | null = null;
