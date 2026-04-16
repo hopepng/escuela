@@ -49,9 +49,9 @@
           </td>
           <td class="td-email">{{ user.email }}</td>
           <td>
-            <span class="role-badge" [ngClass]="'role-' + (user.role)">
-              {{ getRoleLabel(user.role) }}
-            </span>
+            <span class="role-badge" [ngClass]="'role-' + getRoleName(user.role)">
+  {{ getRoleLabel(user.role) }}
+</span>
           </td>
           <td class="td-actions">
             <ng-container *ngIf="deletingId !== user.id; else confirmTpl">

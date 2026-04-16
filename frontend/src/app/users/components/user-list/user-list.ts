@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { UserService } from '../../../core/services/user';
@@ -21,7 +21,6 @@ export class UserList implements OnInit {
   form: FormGroup;
   saving = false;
   formError = '';
-
   deletingId: number | null = null;
 
   readonly roles = [
@@ -36,7 +35,11 @@ export class UserList implements OnInit {
     estudiante: 'Estudiante',
   };
 
-  constructor(private userService: UserService, private fb: FormBuilder) {
+  constructor(
+    private userService: UserService,
+    private fb: FormBuilder,
+    private cdr: ChangeDetectorRef   // ← agregar esto
+  ) {
     this.form = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(2)]],
       email: ['', [Validators.required, Validators.email]],
@@ -49,21 +52,22 @@ export class UserList implements OnInit {
     this.loadUsers();
   }
 
-loadUsers(): void {
-  this.loading = true;
-  this.userService.getAll().subscribe({
-    next: (users) => {
-      console.log('✅ next:', users);
-      this.users = users;
-      this.loading = false;
-    },
-    error: (err) => {
-      console.log('❌ error:', err);
-      this.error = 'Error al cargar usuarios.';
-      this.loading = false;
-    },
-  });
-}
+  loadUsers(): void {
+    this.loading = true;
+    this.userService.getAll().subscribe({
+      next: (users) => {
+        this.users = users;
+        this.loading = false;
+        this.error = '';
+        this.cdr.detectChanges();   // ← forzar detección
+      },
+      error: (err) => {
+        this.error = 'Error al cargar usuarios.';
+        this.loading = false;
+        this.cdr.detectChanges();   // ← forzar detección
+      },
+    });
+  }
 
   openCreate(): void {
     this.editingUser = null;
@@ -133,6 +137,10 @@ loadUsers(): void {
   getInitial(name: string): string {
     return name?.charAt(0)?.toUpperCase() ?? '?';
   }
+  
+  getRoleName(role: any): string {
+  return role?.name ?? role ?? '';
+}
 
   getRoleLabel(role: any): string {
     return this.roleLabels[role?.name ?? role] ?? role;
