@@ -3,8 +3,8 @@ import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { LoginRequest, TokenResponse, TokenPayload } from '../models/auth';
-import { User } from '../models/user';
+import { LoginRequest, TokenResponse, TokenPayload,} from '../models/auth';
+import { User, Role } from '../models/user';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -19,7 +19,7 @@ export class AuthService {
 
 login(credentials: LoginRequest): Observable<TokenResponse> {
   const body = new HttpParams()
-    .set('username', credentials.email)   // ← OAuth2 espera "username", no "email"
+    .set('username', credentials.email)  
     .set('password', credentials.password);
 
   const headers = new HttpHeaders({
@@ -64,18 +64,17 @@ private redirectByRole(): void {
     return this.decodeToken(token)?.role ?? null;
   }
 
-  private loadUserFromToken(token: string): void {
-    const payload = this.decodeToken(token);
-    if (payload) {
-      this.currentUserSubject.next({
-        id: payload.sub,
-        name: payload.name,
-        email: '',
-        role: payload.role as any
-      });
-    }
+private loadUserFromToken(token: string): void {
+  const payload = this.decodeToken(token);
+  if (payload) {
+    this.currentUserSubject.next({
+      id: payload.sub,
+      name: payload.name,
+      email: '',
+      role: { id: 0, name: payload.role as Role }  
+    });
   }
-
+}
   private decodeToken(token: string): TokenPayload | null {
     try {
       return JSON.parse(atob(token.split('.')[1]));

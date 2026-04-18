@@ -22,11 +22,11 @@ export class CourseService {
   }
 
   getById(id: number): Observable<Course> {
-    return this.http.get<Course>(`${this.apiUrl}/${id}`);
+    return this.http.get<Course>(`${this.apiUrl}${id}`);
   }
 
   getStudents(courseId: number): Observable<CourseStudent[]> {
-    return this.http.get<CourseStudent[]>(`${this.apiUrl}/${courseId}/students`);
+    return this.http.get<CourseStudent[]>(`${this.apiUrl}${courseId}/students`);
   }
 
   create(course: CourseCreate): Observable<Course> {
@@ -34,10 +34,10 @@ export class CourseService {
   }
 
   update(id: number, course: Partial<CourseCreate>): Observable<Course> {
-    return this.http.put<Course>(`${this.apiUrl}/${id}`, course);
+    return this.http.put<Course>(`${this.apiUrl}${id}`, course);
   }
 
   delete(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+    return this.http.delete<void>(`${this.apiUrl}${id}`);
   }
 }

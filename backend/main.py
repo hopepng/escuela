@@ -1,10 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from database import Base, engine
-import models.roles
-import models.user
-import models.course
-import models.enrollment
 from routers import auth, users, courses, enrollments
 
 Base.metadata.create_all(bind=engine)

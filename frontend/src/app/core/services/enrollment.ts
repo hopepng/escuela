@@ -6,7 +6,7 @@ import { Enrollment, EnrollmentCreate, EnrollmentUpdate } from '../models/enroll
 
 @Injectable({ providedIn: 'root' })
 export class EnrollmentService {
-  private apiUrl = `${environment.apiUrl}/enrollments`;
+  private apiUrl = `${environment.apiUrl}/enrollments/`;
 
   constructor(private http: HttpClient) {}
 
@@ -19,10 +19,10 @@ export class EnrollmentService {
   }
 
   update(id: number, data: EnrollmentUpdate): Observable<Enrollment> {
-    return this.http.put<Enrollment>(`${this.apiUrl}/${id}`, data);
+    return this.http.put<Enrollment>(`${this.apiUrl}${id}`, data);
   }
 
   delete(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+    return this.http.delete<void>(`${this.apiUrl}${id}`);
   }
 }
